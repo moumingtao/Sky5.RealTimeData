@@ -58,8 +58,8 @@ namespace Sky5.RealTimeData.Logic
                     find = find.Skip(bind.Page.Skip);
                 if (bind.Page.Limit.HasValue)
                     find = find.Limit(bind.Page.Limit);
-                bind.Page.FirstRow = null;
-                bind.Page.LastRow = null;
+                bind.Page.FirstSort = null;
+                bind.Page.LastSort = null;
             }
 
             if (bind.Projection != null)
@@ -74,7 +74,7 @@ namespace Sky5.RealTimeData.Logic
                 }
             }
 
-            if (bind.Page != null && bind.Page.FirstRow != null)
+            if (bind.Page != null && bind.Page.FirstSort != null)
             {
                 bind.Page.Total = await find.CountDocumentsAsync(bind.Client.Context.ConnectionAborted);
             }
@@ -84,48 +84,51 @@ namespace Sky5.RealTimeData.Logic
         {
             if (CancellationWatchSource != null && !CancellationWatchSource.IsCancellationRequested)
                 return;
-            
+
+            ModifyItems modify = new ModifyItems();
             CancellationWatchSource = new CancellationTokenSource();
             using (var cursor=await Collection.WatchAsync(new ChangeStreamOptions
             {
 
             }, CancellationWatchSource.Token))
             {
-                lock (Binds)
+                while (await cursor.MoveNextAsync() && cursor.Current.Count() == 0)
                 {
-                    foreach (var item in cursor.Current)
+                    lock (Binds)
                     {
-                        switch (item.OperationType)
+                        foreach (var item in cursor.Current)
                         {
-                            case ChangeStreamOperationType.Insert:
-                                foreach (var bind in Binds)
-                                    bind.OnInserted(item);
-                                break;
-                            case ChangeStreamOperationType.Update:
-                                foreach (var bind in Binds)
-                                    bind.OnUpdated(item);
-                                break;
-                            case ChangeStreamOperationType.Replace:
-                                foreach (var bind in Binds)
-                                    bind.OnReplaced(item);
-                                break;
-                            case ChangeStreamOperationType.Delete:
-                                foreach (var bind in Binds)
-                                    bind.OnDeleted(item);
-                                break;
-                            case ChangeStreamOperationType.Invalidate:
-                                break;
-                            case ChangeStreamOperationType.Rename:
-                                foreach (var bind in Binds)
-                                    bind.OnRenamed(item);
-                                break;
-                            case ChangeStreamOperationType.Drop:
-                                foreach (var bind in Binds)
-                                    bind.OnReplaced(item);
-                                break;
-                            default:
-                                break;
+                            switch (item.OperationType)
+                            {
+                                case ChangeStreamOperationType.Insert:
+                                    foreach (var bind in Binds)
+                                        bind.OnInserted(item);
+                                    break;
+                                case ChangeStreamOperationType.Update:
+                                    foreach (var bind in Binds)
+                                        bind.OnUpdated(item);
+                                    break;
+                                case ChangeStreamOperationType.Replace:
+                                    foreach (var bind in Binds)
+                                        bind.OnUpdated(item);
+                                    break;
+                                case ChangeStreamOperationType.Delete:
+                                    foreach (var bind in Binds)
+                                        bind.OnDeleted(item);
+                                    break;
+                                case ChangeStreamOperationType.Invalidate:
+                                    foreach (var bind in Binds)
+                                        bind.OnInvalidated(item);
+                                    break;
+                                case ChangeStreamOperationType.Rename:
+                                    foreach (var bind in Binds)
+                                        bind.OnRenamed(item);
+                                    break;
+                            }
                         }
+
+                        foreach (var bind in Binds)
+                            bind.BeginPublishLoop(null);
                     }
                 }
             }

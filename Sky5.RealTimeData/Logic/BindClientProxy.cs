@@ -10,7 +10,9 @@ namespace Sky5.RealTimeData.Logic
     public abstract class BindClientProxy
     {
         public HubCallerContext Context;
-        public abstract void Remove(IEnumerable<BsonValue> keys);
         public abstract void Patch(IEnumerable<BsonDocument> rows);
+        internal abstract void Insert(BsonDocument fullDocument);
+
+        public abstract Task Modify(ModifyItems modify);
     }
 }

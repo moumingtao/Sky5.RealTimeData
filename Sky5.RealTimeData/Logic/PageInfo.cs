@@ -13,7 +13,10 @@ namespace Sky5.RealTimeData.Logic
         public int? Skip { get; set; }
         public int? Limit { get; set; }
 
-        public BsonDocument FirstRow { get; set; }
-        public BsonDocument LastRow { get; set; }
+        public BsonDocument FirstSort { get; set; }
+        public BsonDocument LastSort { get; set; }
+
+        public bool BeforeFirst(BsonDocument doc) => SortUtils.Compare(Sort, doc, FirstSort) < 0;
+        public bool BeforeLast(BsonDocument doc) => SortUtils.Compare(Sort, doc, LastSort) < 0;
     }
 }
