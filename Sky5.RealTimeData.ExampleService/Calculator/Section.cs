@@ -18,6 +18,7 @@ namespace Sky5.RealTimeData.ExampleService.Calculator
         internal void SetNum1(int value)
         {
             view.Num1 = value;
+            NotifyChanged();
         }
     }
 }

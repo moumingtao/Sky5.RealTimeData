@@ -12,7 +12,9 @@ namespace Sky5.RealTimeData.ExampleService
         }
         public void CalcSetNum1(Guid id, int value)
         {
-            ((Calculator.Section)Context.Items[id]).SetNum1(value);
+            var vps = (Dictionary<Guid, Viewport>)Context.Items[Util.KeyDataSections];
+            var view = ((Calculator.Section)vps[id]);
+            view.SetNum1(value);
         }
 
     }

@@ -10,17 +10,16 @@ namespace Sky5.RealTimeData.ExampleService.Calculator
 {
     public class Source : DataSource
     {
-        IServiceProvider ServiceProvider;
+        Section Section = new Section();
 
         public Source(IServiceProvider ServiceProvider)
         {
-            this.ServiceProvider = ServiceProvider;
             Url = "/calc";
         }
 
         public override Viewport CreateViewport(QueryString query)
         {
-            return new Section();
+            return Section;
         }
     }
 }

@@ -35,13 +35,13 @@ namespace Sky5.RealTimeData
             }
         }
 
-        public async Task<Guid> Watch(Hub hub, Uri uri)
+        public async Task<Guid> Watch(Hub hub, string url)
         {
-            var query = new QueryString(uri.Query);
+            var info = url.Split('?', 2);
             foreach (var item in Source)
             {
-                if (!string.Equals(item.Url, uri.LocalPath, StringComparison.OrdinalIgnoreCase)) continue;
-                var section = item.CreateViewport(query);
+                if (!string.Equals(item.Url, info[0], StringComparison.OrdinalIgnoreCase)) continue;
+                var section = item.CreateViewport(info.Length > 1 ? new QueryString(info[1]) : default);
                 if (section == null) continue;
                 section.Source = item;
                 section.AddMonitor(hub.Context);
@@ -62,7 +62,7 @@ namespace Sky5.RealTimeData
                 }
                 await Groups.AddToGroupAsync(hub.Context.ConnectionId, section.ID.ToString());
                 if (section.CachedData != null)
-                    await section.PushFullDataUseCached(hub.Clients.Client(hub.Context.ConnectionId));
+                    await section.PushFullDataUseCached(hub.Clients.Caller);
                 return section.ID;
             }
             return default;

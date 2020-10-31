@@ -12,10 +12,21 @@ namespace Sky5.RealTimeData
         {
             DataSourceManager = dataSourceManager;
         }
-        public Task<Guid> Watch(Uri uri) => DataSourceManager.Watch(this, uri);
-        public void Leave(Guid id) => DataSourceManager.Leave(this, id);
+        public async Task<Guid> Watch(string url)
+        {
+            //return default;
+            return await DataSourceManager.Watch(this, url);
+        }
+
+        public void Leave(Guid id)
+        {
+            //return;
+            DataSourceManager.Leave(this, id);
+        }
+
         public override Task OnDisconnectedAsync(Exception exception)
         {
+            // return Task.CompletedTask;
             DataSourceManager.OnDisconnectedAsync(this);
             return base.OnDisconnectedAsync(exception);
         }
