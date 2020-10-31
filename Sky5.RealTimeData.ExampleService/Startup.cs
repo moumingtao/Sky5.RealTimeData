@@ -50,7 +50,7 @@ namespace Sky5.RealTimeData.ExampleService
                 });
                 endpoints.MapHub<RealTimeHub>("RealTimeData").RequireCors("debugCors");
                 var manager = app.ApplicationServices.GetService<DataSourceManager>();
-                foreach (var item in manager.Source)
+                foreach (var item in manager.Source.Values)
                 {
                     endpoints.MapGet(item.Url, item.HttpHandle);
                 }

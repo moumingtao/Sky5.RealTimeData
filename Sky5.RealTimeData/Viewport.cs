@@ -17,7 +17,7 @@ namespace Sky5.RealTimeData
         readonly HashSet<HubCallerContext> monitors = new HashSet<HubCallerContext>();
         JsonDiffPatch jdp = new JsonDiffPatch();
         public JToken CachedData { get; internal set; }
-        DateTime LastUpdateTime;
+        internal DateTime LastUpdateTime;
         public abstract JToken GetRealData();
 
         internal void AddMonitor(HubCallerContext monitor)
@@ -89,7 +89,7 @@ namespace Sky5.RealTimeData
                                 CachedData = realData;
                                 var prevTime = LastUpdateTime;
                                 LastUpdateTime = DateTime.Now;
-                                await client.SendCoreAsync("PatchDiff", new object[] { prevTime, LastUpdateTime, token });
+                                await client.SendCoreAsync("PatchDiff", new object[] { ID, prevTime, LastUpdateTime, token });
                             }
                         }
                         var delay = 100 - (int)(DateTime.Now - begin).TotalMilliseconds;
@@ -103,6 +103,6 @@ namespace Sky5.RealTimeData
             } while (Interlocked.CompareExchange(ref invalid, 0, 1) == 2);
         }
 
-        internal Task PushFullDataUseCached(IClientProxy client) => client.SendCoreAsync("PushFullData", new object[] { LastUpdateTime, CachedData });
+        internal Task PushFullDataUseCached(IClientProxy client) => client.SendCoreAsync("PushFullData", new object[] { ID, LastUpdateTime, CachedData });
     }
 }

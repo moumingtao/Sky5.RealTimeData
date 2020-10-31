@@ -12,23 +12,20 @@ namespace Sky5.RealTimeData
         {
             DataSourceManager = dataSourceManager;
         }
-        public async Task<Guid> Watch(string url)
-        {
-            //return default;
-            return await DataSourceManager.Watch(this, url);
-        }
 
-        public void Leave(Guid id)
-        {
-            //return;
-            DataSourceManager.Leave(this, id);
-        }
+        /// <summary>
+        /// 开始监听指定数据源
+        /// </summary>
+        /// <param name="url">指定数据源的url</param>
+        /// <returns>被监听数据窗口的id</returns>
+        public Task<ViewportState> Watch(string url) => DataSourceManager.Watch(this, url);
 
-        public override Task OnDisconnectedAsync(Exception exception)
-        {
-            // return Task.CompletedTask;
-            DataSourceManager.OnDisconnectedAsync(this);
-            return base.OnDisconnectedAsync(exception);
-        }
+        /// <summary>
+        /// 取消监听指定数据源
+        /// </summary>
+        /// <param name="id">指定数据源窗口的id</param>
+        public Task Leave(Guid id) => DataSourceManager.Leave(this, id);
+
+        public override Task OnDisconnectedAsync(Exception exception) => DataSourceManager.OnDisconnectedAsync(this);
     }
 }
