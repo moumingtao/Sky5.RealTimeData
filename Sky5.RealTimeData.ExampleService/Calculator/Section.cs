@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Sky5.RealTimeData.ExampleService.Calculator
 {
-    public class Section : Viewport
+    public class Section : ViewportBase
     {
         readonly View view = new View();
         public override JToken GetRealData()

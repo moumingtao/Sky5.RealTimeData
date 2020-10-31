@@ -12,7 +12,7 @@ namespace Sky5.RealTimeData
     /// <summary>
     /// 封装一个数据源
     /// </summary>
-    public abstract class DataSource
+    public abstract class DataSourceBase
     {
         public virtual DataSourceManager Manager { get; internal set; }
 
@@ -23,7 +23,7 @@ namespace Sky5.RealTimeData
         /// </summary>
         /// <param name="uri">用于获取视图的Url</param>
         /// <returns>uri匹配成功返回视图对象，否则返回null</returns>
-        public abstract Viewport CreateViewport(QueryString query);
+        public abstract ViewportBase CreateViewport(QueryString query);
 
         public virtual Task HttpHandle(HttpContext context)
         {
@@ -35,6 +35,12 @@ namespace Sky5.RealTimeData
                 context.Response.ContentType = "application/json;charset=UTF-8";
                 return context.Response.WriteAsync(view.GetRealData().ToString());
             }
+        }
+        protected internal virtual void OnActivate(ViewportBase viewport)
+        {
+        }
+        protected internal virtual void OnInactivation(ViewportBase viewport)
+        {
         }
     }
 }

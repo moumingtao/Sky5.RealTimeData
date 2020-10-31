@@ -18,14 +18,14 @@ namespace Sky5.RealTimeData
     public abstract class DataSourceManager
     {
         protected readonly IServiceProvider provider;
-        public readonly Dictionary<string, DataSource> Source = new Dictionary<string, DataSource>(StringComparer.OrdinalIgnoreCase);
+        public readonly Dictionary<string, DataSourceBase> Source = new Dictionary<string, DataSourceBase>(StringComparer.OrdinalIgnoreCase);
         public abstract IHubClients Clients { get; }
         public abstract IGroupManager Groups { get; }
 
         public DataSourceManager(IServiceProvider provider)
         {
             this.provider = provider;
-            foreach (var item in provider.GetService<IEnumerable<DataSource>>())
+            foreach (var item in provider.GetService<IEnumerable<DataSourceBase>>())
             {
                 Source.Add(item.Url, item);
                 item.Manager = this;
@@ -39,17 +39,17 @@ namespace Sky5.RealTimeData
             {
                 var viewport = item.CreateViewport(info.Length > 1 ? new QueryString(info[1]) : default);
                 if (viewport == null) return default;
-                viewport.Source = item;
+                viewport.DataSource = item;
                 viewport.AddMonitor(hub.Context);
 
                 lock (hub.Context.Items)
                 {
-                    Dictionary<Guid, Viewport> secs;
+                    Dictionary<Guid, ViewportBase> secs;
                     if (hub.Context.Items.TryGetValue(Util.KeyDataSections, out var value))
-                        secs = (Dictionary<Guid, Viewport>)value;
+                        secs = (Dictionary<Guid, ViewportBase>)value;
                     else
                     {
-                        secs = new Dictionary<Guid, Viewport>();
+                        secs = new Dictionary<Guid, ViewportBase>();
                         hub.Context.Items.Add(Util.KeyDataSections, secs);
                     }
                     secs.Add(viewport.ID, viewport);
@@ -64,7 +64,7 @@ namespace Sky5.RealTimeData
         {
             if (hub.Context.Items.TryGetValue(Util.KeyDataSections, out var value))
             {
-                var vps = (Dictionary<Guid, Viewport>)value;
+                var vps = (Dictionary<Guid, ViewportBase>)value;
                 if (vps.TryGetValue(id, out var viewport))
                 {
                     vps.Remove(id);
@@ -78,7 +78,7 @@ namespace Sky5.RealTimeData
         {
             if (hub.Context.Items.TryGetValue(Util.KeyDataSections, out var value))
             {
-                var secs = (Dictionary<Guid, Viewport>)value;
+                var secs = (Dictionary<Guid, ViewportBase>)value;
                 foreach (var viewport in secs.Values)
                 {
                     viewport.Remove(hub.Context);

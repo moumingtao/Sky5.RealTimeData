@@ -11,13 +11,13 @@ namespace Sky5.RealTimeData
         public const string KeyDataSections = "Sky5.RealTimeData.DataSections";
         public static void AddRealTimeManager<THub>(this IServiceCollection services) where THub : Hub
         {
-            services.AddSingleton<IEnumerable<DataSource>>(provider => {
-                var ss = new List<DataSource>();
+            services.AddSingleton<IEnumerable<DataSourceBase>>(provider => {
+                var ss = new List<DataSourceBase>();
                 foreach (var item in services)
                 {
-                    if (typeof(DataSource).IsAssignableFrom(item.ServiceType))
+                    if (typeof(DataSourceBase).IsAssignableFrom(item.ServiceType))
                     {
-                        var s = (DataSource)provider.GetService(item.ServiceType);
+                        var s = (DataSourceBase)provider.GetService(item.ServiceType);
                         ss.Add(s);
                     }
                 }

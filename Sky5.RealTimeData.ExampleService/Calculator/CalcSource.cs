@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Sky5.RealTimeData.ExampleService.Calculator
 {
-    public class Source : DataSource
+    public class Source : DataSourceBase
     {
         Section Section = new Section();
 
@@ -17,7 +17,7 @@ namespace Sky5.RealTimeData.ExampleService.Calculator
             Url = "/calc";
         }
 
-        public override Viewport CreateViewport(QueryString query)
+        public override ViewportBase CreateViewport(QueryString query)
         {
             return Section;
         }

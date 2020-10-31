@@ -13,6 +13,18 @@ namespace Sky5.RealTimeData
             DataSourceManager = dataSourceManager;
         }
 
+        static Dictionary<Guid, ViewportBase> EmptyViewports = new Dictionary<Guid, ViewportBase>();
+        protected Dictionary<Guid, ViewportBase> Viewports
+        {
+            get
+            {
+                if (Context.Items.TryGetValue(Util.KeyDataSections, out var value))
+                    return (Dictionary<Guid, ViewportBase>)value;
+                else
+                    return EmptyViewports;
+            }
+        }
+
         /// <summary>
         /// 开始监听指定数据源
         /// </summary>

@@ -10,12 +10,7 @@ namespace Sky5.RealTimeData.ExampleService
         public RealTimeHub(DataSourceManager dataSourceManager) : base(dataSourceManager)
         {
         }
-        public void CalcSetNum1(Guid id, int value)
-        {
-            var vps = (Dictionary<Guid, Viewport>)Context.Items[Util.KeyDataSections];
-            var view = ((Calculator.Section)vps[id]);
-            view.SetNum1(value);
-        }
+        public void CalcSetNum1(Guid id, int value) => ((Calculator.Section)Viewports[id]).SetNum1(value);
 
     }
 }

@@ -10,15 +10,55 @@ using System.Threading.Tasks;
 
 namespace Sky5.RealTimeData
 {
-    public abstract class Viewport
+    public abstract class ViewportBase
     {
         public readonly Guid ID = Guid.NewGuid();
-        public DataSource Source { get; internal set; }
+        public DataSourceBase DataSource { get; internal set; }
         readonly HashSet<HubCallerContext> monitors = new HashSet<HubCallerContext>();
-        JsonDiffPatch jdp = new JsonDiffPatch();
         public JToken CachedData { get; internal set; }
         internal DateTime LastUpdateTime;
         public abstract JToken GetRealData();
+
+        #region 失活和激活
+        protected virtual void OnActivate()
+        {
+            CachedData = GetRealData();
+            DataSource.OnActivate(this);
+        }
+        protected virtual void OnInactivation()
+        {
+            CachedData = null;
+            DataSource.OnInactivation(this);
+        }
+        #endregion
+
+        #region 循环刷新
+        protected async ValueTask BeginLoop(int DelayMilliseconds)
+        {
+            do
+            {
+                var begin = DateTime.Now;
+                try
+                {
+                    await ExecuteWorkeOnce();
+                    var delay = DelayMilliseconds - (int)(DateTime.Now - begin).TotalMilliseconds;
+                    if (delay > 0)
+                    {
+                        if (delay > DelayMilliseconds)
+                            await Task.Delay(DelayMilliseconds);
+                        else
+                            await Task.Delay(delay);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await OnLoopWorkerException(ex);
+                }
+            } while (monitors.Count > 0);
+        }
+        public abstract ValueTask ExecuteWorkeOnce();
+        protected virtual Task OnLoopWorkerException(Exception ex) => Task.Delay(5000);
+        #endregion
 
         internal void AddMonitor(HubCallerContext monitor)
         {
@@ -29,15 +69,6 @@ namespace Sky5.RealTimeData
                 leaveEmpty = monitors.Count == 1;
             }
             if (leaveEmpty) OnActivate();
-        }
-
-        protected virtual void OnActivate()
-        {
-            CachedData = GetRealData();
-        }
-        protected virtual void OnInactivation()
-        {
-            CachedData = null;
         }
 
         internal void Remove(HubCallerContext monitor)
@@ -51,6 +82,7 @@ namespace Sky5.RealTimeData
             if (toEmpty) OnInactivation();
         }
 
+        #region 限制频率的JsonDiffPatch
         int invalid;
         ValueTask LastPushTask;
         /// <summary>
@@ -64,6 +96,7 @@ namespace Sky5.RealTimeData
             return LastPushTask;
         }
 
+        JsonDiffPatch jdp = new JsonDiffPatch();
         async ValueTask LoopPushDiff()
         {
             do
@@ -74,7 +107,7 @@ namespace Sky5.RealTimeData
                     {
                         var begin = DateTime.Now;
                         var realData = GetRealData();
-                        var client = Source.Manager.Clients.Group(ID.ToString());
+                        var client = DataSource.Manager.Clients.Group(ID.ToString());
                         if (CachedData == null)
                         {
                             CachedData = realData;
@@ -102,6 +135,7 @@ namespace Sky5.RealTimeData
                 }
             } while (Interlocked.CompareExchange(ref invalid, 0, 1) == 2);
         }
+        #endregion
 
         internal Task PushFullDataUseCached(IClientProxy client) => client.SendCoreAsync("PushFullData", new object[] { ID, LastUpdateTime, CachedData });
     }
