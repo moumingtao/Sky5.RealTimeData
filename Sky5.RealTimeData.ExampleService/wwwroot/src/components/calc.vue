@@ -7,6 +7,7 @@
 
 <script>
     import * as signalR from "@microsoft/signalr";
+    import * as jsondiffpatch from 'jsondiffpatch'
     export default {
         created() {
             // 配置SignalR连接
@@ -16,16 +17,16 @@
                 .build();
 
             // 配置SignalR回调
-            this.connection.on("patchDiff", (prevVersion, currVersion, token)=>{
+            this.connection.on("PatchDiff", (prevVersion, currVersion, diff)=>{
                 this.prevVersion = prevVersion;
                 this.currVersion = currVersion;
-                this.token = token;
-                console.log(prevVersion, currVersion, token);
+                jsondiffpatch.patch(this.token, diff)
+                console.log(prevVersion, currVersion, diff)
             });
-            this.connection.on("pushFullData", (currVersion, token)=>{
+            this.connection.on("PushFullData", (currVersion, token)=>{
                 this.currVersion = currVersion;
                 this.token = token;
-                console.log(token);
+                console.log(currVersion, token);
             });
 
             this.connect();
@@ -44,7 +45,7 @@
                 await this.connection.start();
                 this.viewportId = await this.connection.invoke("Watch", "/calc");
             },calcSetNum1(){
-                this.connection.send("CalcSetNum1", this.viewportId, 2);
+                this.connection.send("CalcSetNum1", this.viewportId, this.token.Num1 + 1);
             }
         }
     }

@@ -11,7 +11,7 @@
     "@microsoft/signalr": "^3.1.9",
     "core-js": "^3.6.5",
     "element-ui": "^2.13.2",
-    "json-diff": "^0.5.4",
+    "jsondiffpatch": "^0.4.1",
     "less": "^3.12.2",
     "less-loader": "^7.0.1",
     "vue": "^2.6.11",

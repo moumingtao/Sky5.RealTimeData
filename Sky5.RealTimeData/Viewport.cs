@@ -16,7 +16,7 @@ namespace Sky5.RealTimeData
         public DataSource Source { get; internal set; }
         readonly HashSet<HubCallerContext> monitors = new HashSet<HubCallerContext>();
         JsonDiffPatch jdp = new JsonDiffPatch();
-        public JToken CachedData;
+        public JToken CachedData { get; internal set; }
         DateTime LastUpdateTime;
         public abstract JToken GetRealData();
 
@@ -83,11 +83,14 @@ namespace Sky5.RealTimeData
                         }
                         else
                         {
-                            var token = jdp.Patch(CachedData, realData);
-                            CachedData = realData;
-                            var prevTime = LastUpdateTime;
-                            LastUpdateTime = DateTime.Now;
-                            await client.SendCoreAsync("patchDiff", new object[] { prevTime, LastUpdateTime, token });
+                            var token = jdp.Diff(CachedData, realData);
+                            if (token != null)
+                            {
+                                CachedData = realData;
+                                var prevTime = LastUpdateTime;
+                                LastUpdateTime = DateTime.Now;
+                                await client.SendCoreAsync("PatchDiff", new object[] { prevTime, LastUpdateTime, token });
+                            }
                         }
                         var delay = 100 - (int)(DateTime.Now - begin).TotalMilliseconds;
                         if (delay > 0 && delay < 1000) await Task.Delay(delay);
@@ -100,6 +103,6 @@ namespace Sky5.RealTimeData
             } while (Interlocked.CompareExchange(ref invalid, 0, 1) == 2);
         }
 
-        internal Task PushFullDataUseCached(IClientProxy client) => client.SendCoreAsync("pushFullData", new object[] { LastUpdateTime, CachedData });
+        internal Task PushFullDataUseCached(IClientProxy client) => client.SendCoreAsync("PushFullData", new object[] { LastUpdateTime, CachedData });
     }
 }
